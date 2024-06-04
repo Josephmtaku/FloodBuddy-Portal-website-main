@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FloodBuddy Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend+Deca&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+
+    <script>
+        var xmlData = `<?xml version="1.0" encoding="UTF-8"?>
+<users>
+    <user>
+        <username>admin</username>
+        <password>admin</password>
+    </user>
+</users>`;
+
+        function processLoginDetails() {
+            var parser = new DOMParser();
+            var xmlDoc = parser.parseFromString(xmlData, "text/xml");
+            var users = xmlDoc.getElementsByTagName('user');
+            var username = document.querySelector('input[type="text"]').value;
+            var password = document.querySelector('input[type="password"]').value;
+            var found = false;
+            for (var i = 0; i < users.length; i++) {
+                var user = users[i];
+                var xmlUsername = user.getElementsByTagName('username')[0].textContent;
+                var xmlPassword = user.getElementsByTagName('password')[0].textContent;
+                if (username === xmlUsername && password === xmlPassword) {
+                    found = true;
+                    break;
+                }
+            }
+            if (found) {
+                window.location.href = "index.html";
+            } else {
+                alert("Invalid username or password");
+            }
+        }
+    </script>
+</head>
+<body>
+    <header>
+        <div class="container">
+            
+            <nav>
+                <a href="HomePage.html"><img src="floodBuddy-logo.png" alt="FloodBuddy Logo"></a>
+                <a href="HomePage.html">Home</a>
+                <a href="login.html">Admin Portal</a>
+                <a href="download.html">Download FloodBuddy</a>
+                <a href="about.html">About</a>
+                <a href="#">Help</a>
+            </nav>
+        </div>
+    </header>
+
+<div class="login-container">
+    <h1><span class="flood">Flood</span><span class="buddy">Buddy</span> Admin Portal</h1>
+
+    <form class="loginForm" onsubmit="event.preventDefault(); processLoginDetails()">
+        <input type="text" placeholder="Username" required>
+        <input type="password" placeholder="Password" required>
+        <button type="submit">LOGIN</button>
+    </form>
+</div>
+
+</body>
+</html>

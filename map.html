@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Map</title>
+    <style>
+        #map {
+            height: 100vh;
+            width: 100%;
+        }
+        #map-container {
+            height: 100%;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+            border-radius: 16px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        }
+        #map-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.2);
+            pointer-events: none;
+            z-index: 1;
+            backdrop-filter: blur(10px);
+        }
+        .spinner {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 2;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="map-container">
+        <div id="map"></div>
+        <div id="map-overlay"></div>
+        <div class="spinner"></div>
+    </div>
+    <script>
+        function initMap() {
+            // Get latitude, longitude, and severity from URL parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            const lat = parseFloat(urlParams.get('lat'));
+            const lng = parseFloat(urlParams.get('lng'));
+            const severity = parseFloat(urlParams.get('severity'));
+
+            const map = new google.maps.Map(document.getElementById('map'), {
+                center: { lat: lat, lng: lng },
+                zoom: 15,
+                disableDefaultUI: true,
+                styles: [
+                    {
+                        "elementType": "geometry",
+                        "stylers": [
+                            {
+                                "color": "#f5f5f5"
+                            }
+                        ]
+                    },
+                    {
+                        "elementType": "labels.icon",
+                        "stylers": [
+                            {
+                                "visibility": "off"
+                            }
+                        ]
+                    },
+                    {
+                        "elementType": "labels.text.fill",
+                        "stylers": [
+                            {
+                                "color": "#616161"
+                            }
+                        ]
+                    },
+                    {
+                        "elementType": "labels.text.stroke",
+                        "stylers": [
+                            {
+                                "color": "#f5f5f5"
+                            }
+                        ]
+                    },
+                    {
+                        "featureType": "administrative.land_parcel",
+                        "elementType": "labels.text.fill",
+                        "stylers": [
+                            {
+                                "color": "#bdbdbd"
+                            }
+                        ]
+                    },
+                    {
+                        "featureType": "poi",
+                        "elementType": "geometry",
+                        "stylers": [
+                            {
+                                "color": "#eeeeee"
+                            }
+                        ]
+                    },
+                    {
+                        "featureType": "poi",
+                        "elementType": "labels.text.fill",
+                        "stylers": [
+                            {
+                                "color": "#757575"
+                            }
+                        ]
+                    },
+                    {
+                        "featureType": "poi.park",
+                        "elementType": "geometry",
+                        "stylers": [
+                            {
+                                "color": "#e5e5e5"
+                            }
+                        ]
+                    },
+                    {
+                        "featureType": "poi.park",
+                        "elementType": "labels.text.fill",
+                        "stylers": [
+                            {
+                                "color": "#9e9e9e"
+                            }
+                        ]
+                    },
+                    {
+                        "featureType": "road",
+                        "elementType": "geometry",
+                        "stylers": [
+                            {
+                                "color": "#ffffff"
+                            }
+                        ]
+                    },
+                    {
+                        "featureType": "road.arterial",
+                        "elementType": "labels.text.fill",
+                        "stylers": [
+                            {
+                                "color": "#757575"
+                            }
+                        ]
+                    },
+                    {
+                        "featureType": "road.highway",
+                        "elementType": "geometry",
+                        "stylers": [
+                            {
+                                "color": "#dadada"
+                            }
+                        ]
+                    },
+                    {
+                        "featureType": "road.highway",
+                        "elementType": "labels.text.fill",
+                        "stylers": [
+                            {
+                                "color": "#616161"
+                            }
+                        ]
+                    },
+                    {
+                        "featureType": "road.local",
+                        "elementType": "labels.text.fill",
+                        "stylers": [
+                            {
+                                "color": "#9e9e9e"
+                            }
+                        ]
+                    },
+                    {
+                        "featureType": "transit.line",
+                        "elementType": "geometry",
+                        "stylers": [
+                            {
+                                "color": "#e5e5e5"
+                            }
+                        ]
+                    },
+                    {
+                        "featureType": "transit.station",
+                        "elementType": "geometry",
+                        "stylers": [
+                            {
+                                "color": "#eeeeee"
+                            }
+                        ]
+                    },
+                    {
+                        "featureType": "water",
+                        "elementType": "geometry",
+                        "stylers": [
+                            {
+                                "color": "#74ccf4"
+                            }
+                        ]
+                    },
+                    {
+                        "featureType": "water",
+                        "elementType": "labels.text.fill",
+                        "stylers": [
+                            {
+                                "color": "#9e9e9e"
+                            }
+                        ]
+                    }
+                ]
+            });
+
+            // Add marker at the specified coordinates
+            const marker = new google.maps.Marker({
+                position: { lat: lat, lng: lng },
+                map: map,
+                icon: {
+                    path: google.maps.SymbolPath.CIRCLE,
+                    fillColor: getMarkerColor(severity),
+                    fillOpacity: 1,
+                    strokeWeight: 0,
+                    scale: 10
+                }
+            });
+
+            // Hide loading spinner and overlay once map is loaded
+            google.maps.event.addListenerOnce(map, 'tilesloaded', function () {
+                document.getElementById('map-overlay').style.display = 'none';
+                document.querySelector('.spinner').style.display = 'none';
+            });
+        }
+
+        // Function to determine marker color based on severity
+        function getMarkerColor(severity) {
+            if (severity === 1) {
+                return '#00FF00'; 
+            } else if (severity === 2) {
+                return '#c97c28'; 
+            } else if (severity === 3) {
+                return '#FF0000'; 
+            } else {
+                return '#0000FF'; 
+            }
+        }
+    </script>
+    <script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCG8XhUCzcyvKl2U5KgLw2XcRIDsabZlGs&callback=initMap">
+    </script>
+</body>
+
+</html>

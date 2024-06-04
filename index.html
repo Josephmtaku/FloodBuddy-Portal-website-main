@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FloodBuddy Report Table</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+
+        h1 {
+            text-align: center;
+            margin-top: 50px;
+            color: #ffffff;
+            font-family: 'Lexend Deca', sans-serif;
+            font-weight: 400;
+        }
+
+        .buddy {
+            color: #1f9db0;
+        }
+
+        header {
+            background-color: #000000;
+            padding: 20px;
+            color: #fff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logout-btn {
+            background-color: #1f9db0;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            transition: background-color 0.3s;
+        }
+
+        .logout-btn:hover {
+            background-color: #c82333;
+        }
+
+        table {
+            width: 80%;
+            margin: 20px auto;
+            border-collapse: collapse;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            background-color: #fff;
+        }
+
+        th,
+        td {
+            padding: 15px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #007bff;
+            color: #fff;
+            text-transform: uppercase;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        tr:hover {
+            background-color: #e9ecef;
+        }
+
+        .map-btn {
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            transition-duration: 0.4s;
+            cursor: pointer;
+            border-radius: 8px;
+        }
+
+        .map-btn:hover {
+            background-color: #45a049;
+        }
+        .complete-btn {
+            background-color: #dc3545;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            font-size: 16px;
+            margin: 4px 2px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .complete-btn:hover {
+            background-color: #c82333;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend+Deca:wght@400&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <header>
+        <h1>Flood<span class="buddy">Buddy</span> Report Table</h1>
+        <a href="login.html" class="logout-btn">Logout</a>
+    </header>
+    <table id="reportTable">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Latitude</th>
+                <th>Longitude</th>
+                <th>Severity</th>
+                <th>Action</th>
+                <th>Mark as Complete</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Reports -->
+        </tbody>
+    </table>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.0/firebase-app.js';
+        import { getFirestore, collection, getDocs, doc, deleteDoc } from 'https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBcUsSFMnS04JB-0xYOmf-EPlMwXpO354U",
+            authDomain: "floodbuddy-3e3f6.firebaseapp.com",
+            projectId: "floodbuddy-3e3f6",
+            storageBucket: "floodbuddy-3e3f6.appspot.com",
+            messagingSenderId: "654767866353",
+            appId: "1:654767866353:web:d960c291325aa48d540450",
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const reportTable = document.getElementById('reportTable');
+
+        // Function to render reports in the table sorted by severity (highest first)
+        const renderReports = async () => {
+            const querySnapshot = await getDocs(collection(db, 'reports'));
+            const reports = [];
+            querySnapshot.forEach((doc) => {
+                const report = doc.data();
+                reports.push({
+                    id: doc.id,
+                    latitude: report.latitude,
+                    longitude: report.longitude,
+                    severity: report.severity
+                });
+            });
+
+            // Sort reports by severity (highest first)
+            reports.sort((a, b) => b.severity - a.severity);
+
+            const tableBody = reportTable.querySelector('tbody');
+            tableBody.innerHTML = '';
+            reports.forEach((report) => {
+                const row = tableBody.insertRow();
+                row.id = report.id;
+                row.innerHTML = `
+                    <td>${report.id}</td>
+                    <td>${report.latitude}</td>
+                    <td>${report.longitude}</td>
+                    <td>${report.severity}</td>
+                    <td><a href="map.html?lat=${report.latitude}&lng=${report.longitude}&severity=${report.severity}" class="map-btn">Show Map</a></td>
+                    <td><button class="complete-btn" data-report-id="${report.id}">Mark as Complete</button></td> <!-- "Mark as Complete" button -->
+                `;
+            });
+        };
+        document.addEventListener('DOMContentLoaded', renderReports);
+
+        // Function to handle "Mark as Complete" action
+        const markAsComplete = async (reportId) => {
+            await deleteDoc(doc(db, 'reports', reportId));
+            const tableRow = document.getElementById(reportId);
+            tableRow.parentNode.removeChild(tableRow);
+        };
+        document.addEventListener('click', async (event) => {
+            if (event.target.classList.contains('complete-btn')) {
+                const reportId = event.target.dataset.reportId;
+                await markAsComplete(reportId);
+            }
+        });
+    </script>
+</body>
+
+</html>
